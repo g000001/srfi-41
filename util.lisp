@@ -252,4 +252,23 @@
 (defun eof-object? (obj)
   (eq obj +eof+))
 
+(defmacro iterate (tag specs &body body)
+  (let ((vars  (mapcar #'car specs))
+        (vals  (mapcar #'cadr specs))
+	(id    (gensym))
+        (dvars (map-into (make-list (length specs)) #'gensym)))
+    `(block ,id
+       (let ,(mapcar #'list dvars vals)
+         (macrolet ((,tag ,vars
+                      `(progn (psetq ,@(list ,@(mapcan #'(cl:lambda (dvar var)
+                                                           `(',dvar ,var))
+                                                       dvars
+                                                       vars)))
+                              (go ,',id))))
+           (tagbody
+             ,id
+             (let ,(mapcar #'list vars dvars)
+               (return-from ,id (progn ,@body)))))))))
+
+
 ;;; eof
