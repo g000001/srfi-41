@@ -103,7 +103,7 @@
   (cond ((not (integer? n)) (error 'stream-drop "non-integer argument"))
         ((negative? n) (error 'stream-drop "negative argument"))
         ((not (stream? strm)) (error 'stream-drop "non-stream argument"))
-        (:else (stream-drop n strm))))
+        (:else (stream-drop* n strm))))
 
 (define-function (stream-drop-while pred? strm)
   (letrec ((stream-drop-while
@@ -164,7 +164,7 @@
            (error 'stream-from "non-numeric starting number"))
           ((not (number? delta))
            (error 'stream-from "non-numeric step size"))
-          (:else (stream-from first delta)))))
+          (:else (stream-from* first delta)))))
 
 (define-function (stream-iterate proc base)
   (letrec ((stream-iterate*
@@ -241,25 +241,28 @@
         ((stream-match-pattern strm var (binding ***) body)
           (syntax (let ((var strm) binding ***) body))))))|#
 
+(define-syntax stream-of-aux
+    (syntax-rules (:in :is)
+      ((stream-of-aux expr base)
+       (stream-cons expr base) )
+      ((stream-of-aux expr base (var :in stream) rest ***)
+       (with ((loop (gensym "LOOP-"))
+              (strm (gensym "STRM-")) )
+         (stream-let loop ((strm stream))
+                     (if (stream-null? strm)
+                         base
+                         (let ((var (stream-car strm)))
+                           (stream-of-aux expr (loop (stream-cdr strm))
+                                          rest ***) )))))
+      ((stream-of-aux expr base (var :is exp) rest ***)
+       (let ((var exp)) (stream-of-aux expr base rest ***)) )
+      ((stream-of-aux expr base pred? rest ***)
+       (if pred? (stream-of-aux expr base rest ***) base) )))
+
 (define-syntax stream-of
   (syntax-rules ()
     ((_ expr rest ***)
      (stream-of-aux expr stream-null rest ***))))
-
-(define-syntax stream-of-aux
-  (syntax-rules (in is)
-    ((stream-of-aux expr base)
-     (stream-cons expr base) )
-    ((stream-of-aux expr base (var in stream) rest ***)
-     (stream-let loop ((strm stream))
-                 (if (stream-null? strm)
-                     base
-                     (let ((var (stream-car strm)))
-                       (stream-of-aux expr (loop (stream-cdr strm)) rest ***) ))))
-    ((stream-of-aux expr base (var is exp) rest ***)
-     (let ((var exp)) (stream-of-aux expr base rest ***)) )
-    ((stream-of-aux expr base pred? rest ***)
-     (if pred? (stream-of-aux expr base rest ***) base) )))
 
 (define-function stream-range*
   (stream-lambda (first past delta lt?)
@@ -278,7 +281,7 @@
            (if (not (number? delta))
                (error 'stream-range "non-numeric step size")
                (let ((lt? (if (< 0 delta) #'< #'>)))
-                 (stream-range first past delta lt?) ))))))
+                 (stream-range* first past delta lt?) ))))))
 
 (define-function (stream-ref strm n)
   (declare (optimize (debug 1)))        ;TCO
@@ -365,6 +368,7 @@
                        (funcall gen seed) ))
 
 (define-function (stream-unfolds gen seed)
+  (declare (optimize (debug 1)))        ;TCO
   (letrec ((result-stream->output-streams
             (lambda (result-stream)
               (srfi-5:let loop ((i (len-values gen seed)) (outputs '()))
@@ -381,14 +385,13 @@
                   (stream-cons results (unfold-result-stream gen next)) )
                 (funcall gen seed) )))
            (result-stream->output-stream
-            (stream-lambda
-                           (result-stream i)
+            (stream-lambda (result-stream i)
               (let ((result (list-ref (stream-car result-stream) (- i 1))))
                 (cond ((pair? result)
                        (stream-cons
                         (car result)
                         (result-stream->output-stream (stream-cdr result-stream) i) ))
-                      ((not result)
+                      ((eq :false result) ;(not result)
                        (result-stream->output-stream (stream-cdr result-stream) i) )
                       ((null? result) stream-null)
                       (:else (error 'stream-unfolds "can't happen")) )))))
