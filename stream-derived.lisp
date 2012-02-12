@@ -206,9 +206,9 @@
   (syntax-rules ()
     ((stream-match strm-expr clause ***)
      (let ((strm strm-expr))
-       (cond
+       (srfi-61:cond
          ((not (stream? strm)) (error 'stream-match "non-stream argument"))
-         ((stream-match-test strm clause) => car) ***
+         ((stream-match-test strm clause) :=> #'car) ***
          (:else (error 'stream-match "pattern failure")))))))
 
 (define-syntax stream-match-test
@@ -240,6 +240,24 @@
           (syntax (let (binding ***) body)))
         ((stream-match-pattern strm var (binding ***) body)
           (syntax (let ((var strm) binding ***) body))))))|#
+
+(define-syntax stream-match-pattern
+  (syntax-rules (:_)
+    ((stream-match-pattern strm () (binding ***) body)
+     (and (stream-null? strm) (let (binding ***) body)) )
+    ((stream-match-pattern strm (:_ . rest) (binding ***) body)
+     (and (stream-pair? strm)
+          (let ((strm (stream-cdr strm)))
+            (stream-match-pattern strm rest (binding ***) body) )))
+    ((stream-match-pattern strm (var . rest) (binding ***) body)
+     (with ((temp (gensym "TEMP-")))
+       (and (stream-pair? strm)
+            (let ((temp (stream-car strm)) (strm (stream-cdr strm)))
+              (stream-match-pattern strm rest ((var temp) binding ***) body) ))))
+    ((stream-match-pattern strm :_ (binding ***) body)
+     (let (binding ***) body) )
+    ((stream-match-pattern strm var (binding ***) body)
+     (let ((var strm) binding ***) body) )))
 
 (define-syntax stream-of-aux
     (syntax-rules (:in :is)

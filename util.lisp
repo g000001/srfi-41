@@ -166,8 +166,11 @@
         `(defun ,name ,(to-proper-lambda-list args)
            ,@body))
       `(progn
+         (eval-when (:compile-toplevel :load-toplevel :execute)
+           (setf (fdefinition ',name-args)
+                 (function cl:values) ))
          (setf (fdefinition ',name-args)
-               ,(car body)))))
+               ,(car body) ))))
 
 (declaim (inline vector-ref))
 (defun vector-ref (vec k)

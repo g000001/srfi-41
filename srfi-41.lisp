@@ -2,11 +2,11 @@
 
 (cl:in-package :srfi-41.internal)
 
-(define-record-type stream-type
-  (make-stream box)
-  stream?
-  (box stream-promise stream-promise!))
-
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (define-record-type stream-type
+    (make-stream box)
+    stream?
+    (box stream-promise stream-promise!) ))
 
 (define-syntax stream-lazy
   (syntax-rules ()
@@ -37,13 +37,12 @@
 
 (defvar stream-null (stream-delay (cons 'stream 'null)))
 
-
-(define-record-type stream-pare-type
-  (make-stream-pare kar kdr)
-  stream-pare?
-  (kar stream-kar)
-  (kdr stream-kdr))
-
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (define-record-type stream-pare-type
+    (make-stream-pare kar kdr)
+    stream-pare?
+    (kar stream-kar)
+    (kdr stream-kdr)))
 
 (define-function (stream-pair? obj)
   (and (stream? obj) (stream-pare? (stream-force obj))))

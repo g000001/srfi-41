@@ -8,7 +8,8 @@
                :mbe
                :srfi-9
                :srfi-23
-               :srfi-5)
+               :srfi-5
+               :srfi-61)
   :components ((:file "package")
                (:file "util")
                (:file "srfi-41")

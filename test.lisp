@@ -77,7 +77,27 @@
             (if (funcall pred? a)
                 (values d (list a) :false)
                 (values d :false (list a))))))
-    strm)))
+    strm))
+
+  (define-stream (interleave x yy)
+      (stream-match yy
+                    (() (stream (stream x)))
+                    ((y . ys)
+                     (stream-append
+                      (stream (stream-cons x yy))
+                      (stream-map
+                       (lambda (z) (stream-cons y z))
+                       (interleave x ys))))))
+
+
+  (define-stream (perms xs)
+      (if (stream-null? xs)
+          (stream (stream))
+          (stream-concat
+           (stream-map
+            (lambda (ys)
+              (interleave (stream-car xs) ys))
+            (perms (stream-cdr xs)))))))
 
 (test stream
   ;; define-stream
@@ -192,6 +212,13 @@
                                  (stream-range 1 6) ))))
   (isfsqu '((0 1) (0 2) (0 3) (0 4) (0 5) (0 6) (0 7) (0 8))
           (stream-take 8 (stream-zip (stream-constant 0)
-                                     (stream-from 1)))))
+                                     (stream-from 1) )))
+  (isfsqu '((A 1 2 3 4) (1 A 2 3 4) (1 2 A 3 4) (1 2 3 A 4) (1 2 3 4 A))
+          (stream-map #'stream->list (interleave 'a (list->stream '(1 2 3 4)))) )
+  (isfsqu '((1 2 3 4) (2 1 3 4) (2 3 1 4) (2 3 4 1) (1 3 2 4) (3 1 2 4) (3 2 1 4)
+            (3 2 4 1) (1 3 4 2) (3 1 4 2) (3 4 1 2) (3 4 2 1) (1 2 4 3) (2 1 4 3)
+            (2 4 1 3) (2 4 3 1) (1 4 2 3) (4 1 2 3) (4 2 1 3) (4 2 3 1) (1 4 3 2)
+            (4 1 3 2) (4 3 1 2) (4 3 2 1))
+          (stream-map #'stream->list (perms (list->stream '(1 2 3 4))))))
 
 ;;; eof
