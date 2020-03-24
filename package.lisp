@@ -34,6 +34,9 @@
    "https://github.com/g000001/srfi-23" 
    error)
   (:shadowing-import-from
+   "https://github.com/g000001/srfi-5" 
+   let)
+  (:shadowing-import-from
    "https://github.com/g000001/srfi-61" 
    cond)
   (:shadow loop lambda assoc member map stream))

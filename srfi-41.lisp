@@ -71,13 +71,13 @@
 (define-function (stream-car strm)
   (cond ((not (stream? strm)) (error 'stream-car "non-stream"))
         ((stream-null? strm) (error 'stream-car "null stream"))
-        (:else (stream-force (stream-kar (stream-force strm))))))
+        (else (stream-force (stream-kar (stream-force strm))))))
 
 
 (define-function (stream-cdr strm)
   (cond ((not (stream? strm)) (error 'stream-cdr "non-stream"))
         ((stream-null? strm) (error 'stream-cdr "null stream"))
-        (:else (stream-kdr (stream-force strm)))))
+        (else (stream-kdr (stream-force strm)))))
 
 
 (define-syntax stream-lambda

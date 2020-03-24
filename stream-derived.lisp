@@ -51,29 +51,29 @@
            (error 'stream->list "non-integer count"))
           ((and n (negative? n))
            (error 'stream->list "negative count"))
-          (:else
-           (srfi-5:let loop ((n (if n n -1)) (strm strm))
-                       (if (or (zero? n) (stream-null? strm))
-                           '()
-                           (cons (stream-car strm)
-                                 (loop (- n 1) (stream-cdr strm))) ))))))
+          (else
+           (let loop ((n (if n n -1)) (strm strm))
+             (if (or (zero? n) (stream-null? strm))
+                 '()
+                 (cons (stream-car strm)
+                       (loop (- n 1) (stream-cdr strm))) ))))))
 
 
 (define-function stream-append*
   (stream-lambda (strms)
                  (cond ((null? (cdr strms)) (car strms))
                        ((stream-null? (car strms)) (stream-append* (cdr strms)))
-                       (:else (stream-cons
-                               (stream-car (car strms))
-                               (stream-append*
-                                (cons (stream-cdr (car strms)) (cdr strms))))))))
+                       (else (stream-cons
+                              (stream-car (car strms))
+                              (stream-append*
+                               (cons (stream-cdr (car strms)) (cdr strms))))))))
 
 
 (define-function (stream-append . strms)
   (cond ((null? strms) stream-null)
         ((exists (lambda (x) (not (stream? x))) strms)
          (error 'stream-append "non-stream argument"))
-        (:else (stream-append* strms))))
+        (else (stream-append* strms))))
 
 
 (define-function stream-concat*
@@ -84,7 +84,7 @@
           (error 'stream-concat "non-stream object in input stream") )
          ((stream-null? (stream-car strms))
           (stream-concat* (stream-cdr strms)) )
-         (:else (stream-cons
+         (else (stream-cons
                  (stream-car (stream-car strms))
                  (stream-concat*
                   (stream-cons (stream-cdr (stream-car strms))
@@ -101,7 +101,7 @@
   (stream-lambda objs
     (cond ((null? objs) stream-null)
           ((null? (cdr objs)) (stream-cons (car objs) (stream-constant (car objs))))
-          (:else (stream-cons (car objs)
+          (else (stream-cons (car objs)
                               (apply #'stream-constant
                                      (append (cdr objs) (list (car objs))) ))))))
 
@@ -117,7 +117,7 @@
   (cond ((not (integer? n)) (error 'stream-drop "non-integer argument"))
         ((negative? n) (error 'stream-drop "negative argument"))
         ((not (stream? strm)) (error 'stream-drop "non-stream argument"))
-        (:else (stream-drop* n strm))))
+        (else (stream-drop* n strm))))
 
 
 (define-function (stream-drop-while pred? strm)
@@ -131,7 +131,7 @@
            (error 'stream-drop-while "non-procedural argument") )
           ((not (stream? strm))
            (error 'stream-drop-while "non-stream argument") )
-          (:else (stream-drop-while strm)) )))
+          (else (stream-drop-while strm)) )))
 
 
 (define-function (stream-filter pred? strm)
@@ -140,12 +140,12 @@
               (cond ((stream-null? strm) stream-null)
                     ((funcall pred? (stream-car strm))
                      (stream-cons (stream-car strm) (stream-filter (stream-cdr strm))) )
-                    (:else (stream-filter (stream-cdr strm))) ))))
+                    (else (stream-filter (stream-cdr strm))) ))))
     (cond ((not (procedure? pred?))
            (error 'stream-filter "non-procedural argument") )
           ((not (stream? strm))
            (error 'stream-filter "non-stream argument") )
-          (:else (stream-filter strm)) )))
+          (else (stream-filter strm)) )))
 
 
 (define-function (stream-fold proc base strm)
@@ -153,11 +153,11 @@
          (error 'stream-fold "non-procedural argument"))
         ((not (stream? strm))
          (error 'stream-fold "non-stream argument"))
-        (:else (srfi-5:let loop ((base base) (strm strm))
-                           (if (stream-null? strm)
-                               base
-                               (loop (funcall proc base (stream-car strm))
-                                     (stream-cdr strm)))))))
+        (else (let loop ((base base) (strm strm))
+                (if (stream-null? strm)
+                    base
+                    (loop (funcall proc base (stream-car strm))
+                          (stream-cdr strm)))))))
 
 
 (define-function (stream-for-each proc . strms)
@@ -170,7 +170,7 @@
           ((null? strms) (error 'stream-for-each "no stream arguments"))
           ((exists (lambda (x) (not (stream? x))) strms)
            (error 'stream-for-each "non-stream argument") )
-          (:else (stream-for-each strms)) )))
+          (else (stream-for-each strms)) )))
 
 
 (define-function stream-from*
@@ -184,7 +184,7 @@
            (error 'stream-from "non-numeric starting number"))
           ((not (number? delta))
            (error 'stream-from "non-numeric step size"))
-          (:else (stream-from* first delta)))))
+          (else (stream-from* first delta)))))
 
 
 (define-function (stream-iterate proc base)
@@ -201,10 +201,10 @@
 (define-function (stream-length strm)
   (if (not (stream? strm))
       (error 'stream-length "non-stream argument")
-      (srfi-5:let loop ((len 0) (strm strm))
-                  (if (stream-null? strm)
-                      len
-                      (loop (+ len 1) (stream-cdr strm))))))
+      (let loop ((len 0) (strm strm))
+        (if (stream-null? strm)
+            len
+            (loop (+ len 1) (stream-cdr strm))))))
 
 
 (define-syntax stream-let
@@ -224,17 +224,17 @@
           ((null? strms) (error 'stream-map "no stream arguments"))
           ((exists (lambda (x) (not (stream? x))) strms)
            (error 'stream-map "non-stream argument") )
-          (:else (stream-map strms)) )))
+          (else (stream-map strms)) )))
 
 
 (define-syntax stream-match
   (syntax-rules ()
     ((stream-match strm-expr clause ***)
      (let ((strm strm-expr))
-       (srfi-61:cond
+       (cond
          ((not (stream? strm)) (error 'stream-match "non-stream argument"))
-         ((stream-match-test strm clause) :=> #'car) ***
-         (:else (error 'stream-match "pattern failure")))))))
+         ((stream-match-test strm clause) => #'car) ***
+         (else (error 'stream-match "pattern failure")))))))
 
 
 (define-syntax stream-match-test
@@ -267,11 +267,13 @@
           (syntax (let (binding ***) body)))
         ((stream-match-pattern strm var (binding ***) body)
           (syntax (let ((var strm) binding ***) body))))))|#
+
+
 (define-syntax stream-match-pattern
-  (syntax-rules (:_)
+  (syntax-rules (_)
     ((stream-match-pattern strm () (binding ***) body)
      (and (stream-null? strm) (let (binding ***) body)) )
-    ((stream-match-pattern strm (:_ . rest) (binding ***) body)
+    ((stream-match-pattern strm (_ . rest) (binding ***) body)
      (and (stream-pair? strm)
           (let ((strm (stream-cdr strm)))
             (stream-match-pattern strm rest (binding ***) body) )))
@@ -280,7 +282,7 @@
        (and (stream-pair? strm)
             (let ((temp (stream-car strm)) (strm (stream-cdr strm)))
               (stream-match-pattern strm rest ((var temp) binding ***) body) ))))
-    ((stream-match-pattern strm :_ (binding ***) body)
+    ((stream-match-pattern strm _ (binding ***) body)
      (let (binding ***) body) )
     ((stream-match-pattern strm var (binding ***) body)
      (let ((var strm) binding ***) body) )))
@@ -322,10 +324,10 @@
 (define-function (stream-range first past . step)
   (cond ((not (number? first)) (error 'stream-range "non-numeric starting number"))
         ((not (number? past)) (error 'stream-range "non-numeric ending number"))
-        (:else
+        (else
          (let ((delta (cond ((pair? step) (car step))
                             ((< first past) 1)
-                            (:else -1) )))
+                            (else -1) )))
            (if (not (number? delta))
                (error 'stream-range "non-numeric step size")
                (let ((lt? (if (< 0 delta) #'< #'>)))
@@ -337,12 +339,12 @@
   (cond ((not (stream? strm)) (error 'stream-ref "non-stream argument"))
         ((not (integer? n)) (error 'stream-ref "non-integer argument"))
         ((negative? n) (error 'stream-ref "negative argument"))
-        (:else (srfi-5:let loop ((strm strm) (n n))
-                           (cond ((stream-null? strm)
-                                  (error 'stream-ref "beyond end of stream") )
-                                 ((zero? n)
-                                  (stream-car strm) )
-                                 (:else (loop (stream-cdr strm) (- n 1))) )))))
+        (else (let loop ((strm strm) (n n))
+                (cond ((stream-null? strm)
+                       (error 'stream-ref "beyond end of stream") )
+                      ((zero? n)
+                       (stream-car strm) )
+                      (else (loop (stream-cdr strm) (- n 1))) )))))
 
 
 (define-function stream-reverse*
@@ -372,7 +374,7 @@
                     (stream-cdr strm) ))))))
     (cond ((not (procedure? proc)) (error 'stream-scan "non-procedural argument"))
           ((not (stream? strm)) (error 'stream-scan "non-stream argument"))
-          (:else (stream-scan* base strm)) )))
+          (else (stream-scan* base strm)) )))
 
 
 (define-function stream-take*
@@ -386,7 +388,7 @@
   (cond ((not (stream? strm)) (error 'stream-take "non-stream argument"))
         ((not (integer? n)) (error 'stream-take "non-integer argument"))
         ((negative? n) (error 'stream-take "negative argument"))
-        (:else (stream-take* n strm)) ))
+        (else (stream-take* n strm)) ))
 
 
 (define-function (stream-take-while pred? strm)
@@ -396,12 +398,12 @@
                     ((funcall pred? (stream-car strm))
                      (stream-cons (stream-car strm)
                                   (stream-take-while (stream-cdr strm)) ) )
-                    (:else stream-null) ))))
+                    (else stream-null) ))))
     (cond ((not (stream? strm))
            (error 'stream-take-while "non-stream argument") )
           ((not (procedure? pred?))
            (error 'stream-take-while "non-procedural argument") )
-          (:else (stream-take-while strm)) )))
+          (else (stream-take-while strm)) )))
 
 
 (define-function  (stream-unfold mapper pred? generator base)
@@ -417,7 +419,7 @@
            (error 'stream-unfold "non-procedural pred?") )
           ((not (procedure? generator))
            (error 'stream-unfold "non-procedural generator") )
-          (:else (stream-unfold base)) )))
+          (else (stream-unfold base)) )))
 
 
 (define-function (len-values gen seed)
@@ -429,13 +431,13 @@
   (declare (optimize (debug 1)))        ;TCO
   (letrec ((result-stream->output-streams
             (lambda (result-stream)
-              (srfi-5:let loop ((i (len-values gen seed)) (outputs '()))
-                          (if (zero? i)
-                              (apply #'values outputs)
-                              (loop (- i 1)
-                                    (cons (result-stream->output-stream
-                                                 result-stream i)
-                                          outputs )) ))))
+              (let loop ((i (len-values gen seed)) (outputs '()))
+                (if (zero? i)
+                    (apply #'values outputs)
+                    (loop (- i 1)
+                          (cons (result-stream->output-stream
+                                 result-stream i)
+                                outputs )) ))))
            (unfold-result-stream
             (stream-lambda (gen seed)
               (multiple-value-call
@@ -452,7 +454,7 @@
                       ((eq :false result) ;(not result)
                        (result-stream->output-stream (stream-cdr result-stream) i) )
                       ((null? result) stream-null)
-                      (:else (error 'stream-unfolds "can't happen")) )))))
+                      (else (error 'stream-unfolds "can't happen")) )))))
     (if (not (procedure? gen))
         (error 'stream-unfolds "non-procedural argument")
         (result-stream->output-streams (unfold-result-stream gen seed)) )))
@@ -470,7 +472,7 @@
   (cond ((null? strms) (error 'stream-zip "no stream arguments"))
         ((exists (lambda (x) (not (stream? x))) strms)
          (error 'stream-zip "non-stream argument"))
-        (:else (stream-zip* strms))))
+        (else (stream-zip* strms))))
 
 
 ;;; *EOF*

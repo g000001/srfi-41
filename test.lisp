@@ -211,23 +211,20 @@
            0 ))
   (is (equal '((1 3 5) (2 4))
              (multiple-value-call
-               (lambda (odds evens)
-                 (list (stream->list odds)
-                       (stream->list evens) ))
+                 (lambda (odds evens)
+                   (list (stream->list odds)
+                         (stream->list evens) ))
                (stream-partition #'oddp
                                  (stream-range 1 6) ))))
   (isfsqu '((0 1) (0 2) (0 3) (0 4) (0 5) (0 6) (0 7) (0 8))
           (stream-take 8 (stream-zip (stream-constant 0)
                                      (stream-from 1) )))
-  #-lispworks
   (isfsqu '((A 1 2 3 4) (1 A 2 3 4) (1 2 A 3 4) (1 2 3 A 4) (1 2 3 4 A))
           (stream-map #'stream->list (interleave 'a (list->stream '(1 2 3 4)))) )
-  #-lispworks
   (isfsqu '((1 2 3 4) (2 1 3 4) (2 3 1 4) (2 3 4 1) (1 3 2 4) (3 1 2 4) (3 2 1 4)
             (3 2 4 1) (1 3 4 2) (3 1 4 2) (3 4 1 2) (3 4 2 1) (1 2 4 3) (2 1 4 3)
             (2 4 1 3) (2 4 3 1) (1 4 2 3) (4 1 2 3) (4 2 1 3) (4 2 3 1) (1 4 3 2)
             (4 1 3 2) (4 3 1 2) (4 3 2 1))
-          (stream-map #'stream->list (perms (list->stream '(1 2 3 4)))))
-  )
+          (stream-map #'stream->list (perms (list->stream '(1 2 3 4))))))
 
 ;;; *EOF*
