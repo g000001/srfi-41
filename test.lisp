@@ -1,13 +1,14 @@
-(cl:in-package :srfi-41.internal)
+(cl:in-package "https://github.com/g000001/srfi-41#internals")
 
-(def-suite srfi-41)
 
-(in-suite srfi-41)
+(def-suite* srfi-41)
+
 
 (define-syntax isqu
   (syntax-rules ()
     ((isqu ?x ?y)
      (is (cl:equal ?x ?y)))))
+
 
 ;;; is-finite-stream-equal
 (define-syntax isfsqu
@@ -15,6 +16,7 @@
     ((isfsqu ?x ?y)
      (is (equal (the list ?x)
                 (stream->list ?y) )))))
+
 
 ;;;
 ;;; The (streams primitive) library
@@ -30,6 +32,7 @@
   (isqu (stream->list stream-null)
         (stream->list (stream-cdr (stream-cons 'a stream-null))) ))
 
+
 ;;;
 ;;; The (streams derived) library
 ;;;
@@ -43,7 +46,7 @@
 
 
   (defun test-read-char (p)
-    (read-char p nil +eof+ nil) )
+    (read-char p nil *eof* nil) )
 
   (define-stream (test-file->stream filename)
       (let ((p (open filename)))
@@ -98,6 +101,7 @@
             (lambda (ys)
               (interleave (stream-car xs) ys))
             (perms (stream-cdr xs)))))))
+
 
 (test stream
   ;; define-stream
@@ -164,6 +168,7 @@
   ;; stream-let
   (isfsqu '(5 6 7 8 9)
           (stream-take 5 (test-stream-member #'= 5 (stream-from 0))) )
+  
   ;; stream-map
   (isfsqu '(5 6 7 8 9)
           (stream-take 5 (stream-map (lambda (x) (+ 5 x))
@@ -185,6 +190,7 @@
           (stream-range 0 10) )
   (isfsqu '(0 2 4 6 8)
           (stream-range 0 10 2) )
+
   ;; stream-ref
   (is (= 100 (stream-ref (stream-from 0) 100)))
   ;;
@@ -213,12 +219,15 @@
   (isfsqu '((0 1) (0 2) (0 3) (0 4) (0 5) (0 6) (0 7) (0 8))
           (stream-take 8 (stream-zip (stream-constant 0)
                                      (stream-from 1) )))
+  #-lispworks
   (isfsqu '((A 1 2 3 4) (1 A 2 3 4) (1 2 A 3 4) (1 2 3 A 4) (1 2 3 4 A))
           (stream-map #'stream->list (interleave 'a (list->stream '(1 2 3 4)))) )
+  #-lispworks
   (isfsqu '((1 2 3 4) (2 1 3 4) (2 3 1 4) (2 3 4 1) (1 3 2 4) (3 1 2 4) (3 2 1 4)
             (3 2 4 1) (1 3 4 2) (3 1 4 2) (3 4 1 2) (3 4 2 1) (1 2 4 3) (2 1 4 3)
             (2 4 1 3) (2 4 3 1) (1 4 2 3) (4 1 2 3) (4 2 1 3) (4 2 3 1) (1 4 3 2)
             (4 1 3 2) (4 3 1 2) (4 3 2 1))
-          (stream-map #'stream->list (perms (list->stream '(1 2 3 4))))))
+          (stream-map #'stream->list (perms (list->stream '(1 2 3 4)))))
+  )
 
-;;; eof
+;;; *EOF*

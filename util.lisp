@@ -1,9 +1,9 @@
-(cl:in-package :srfi-41.internal)
+(cl:in-package "https://github.com/g000001/srfi-41#internals")
 
-(defconstant +eof+
-  (if (boundp '+eof+)
-      (symbol-value '+eof+)
-      (list nil)))
+#|(let ((eof (list nil)))
+  (defun eof () eof))|#
+
+(defvar *eof* (list nil))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (progn
@@ -65,9 +65,10 @@
 (defmacro set! (var val)
   `(setq ,var ,val))
 
-(declaim (cl:inline list-tail vector-set! list-ref vector->list list->vector
-                    quotient set-car! set-cdr! eqv?
-                    assq assv assoc for-each memq))
+(declaim
+ (cl:inline list-tail vector-set! list-ref vector->list list->vector
+            set-car! set-cdr! eqv?
+            assq assv assoc for-each memq))
 
 (defun eqv? (x y)
   (cl:eql x y))
@@ -251,9 +252,8 @@
 (defun boolean? (obj)
   (cl:typep obj '(cl:member cl:t cl:nil)))
 
-
 (defun eof-object? (obj)
-  (eq obj +eof+))
+  (eq obj *eof*))
 
 (defmacro iterate (tag specs &body body)
   (let ((vars  (mapcar #'car specs))

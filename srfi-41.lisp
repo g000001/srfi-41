@@ -1,6 +1,7 @@
 ;;;; srfi-41.lisp
 
-(cl:in-package :srfi-41.internal)
+(cl:in-package "https://github.com/g000001/srfi-41#internals")
+
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (define-record-type stream-type
@@ -8,20 +9,24 @@
     stream?
     (box stream-promise stream-promise!) ))
 
+
 (define-syntax stream-lazy
   (syntax-rules ()
     ((stream-lazy expr)
      (make-stream
       (cons 'lazy (lambda () expr))))))
 
+
 (define-function (stream-eager expr)
   (make-stream
    (cons 'eager expr)))
+
 
 (define-syntax stream-delay
   (syntax-rules ()
     ((stream-delay expr)
      (stream-lazy (stream-eager expr)))))
+
 
 (define-function (stream-force promise)
   (let ((content (stream-promise promise)))
@@ -35,7 +40,9 @@
                             (stream-promise! promise* content) ))
                  (stream-force promise) )))))
 
+
 (defvar stream-null (stream-delay (cons 'stream 'null)))
+
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (define-record-type stream-pare-type
@@ -44,32 +51,39 @@
     (kar stream-kar)
     (kdr stream-kdr)))
 
+
 (define-function (stream-pair? obj)
   (and (stream? obj) (stream-pare? (stream-force obj))))
+
 
 (define-function (stream-null? obj)
   (and (stream? obj)
        (eqv? (stream-force obj)
              (stream-force stream-null))))
 
+
 (define-syntax stream-cons
   (syntax-rules ()
     ((stream-cons obj strm)
      (stream-eager (make-stream-pare (stream-delay obj) (stream-lazy strm))))))
+
 
 (define-function (stream-car strm)
   (cond ((not (stream? strm)) (error 'stream-car "non-stream"))
         ((stream-null? strm) (error 'stream-car "null stream"))
         (:else (stream-force (stream-kar (stream-force strm))))))
 
+
 (define-function (stream-cdr strm)
   (cond ((not (stream? strm)) (error 'stream-cdr "non-stream"))
         ((stream-null? strm) (error 'stream-cdr "null stream"))
         (:else (stream-kdr (stream-force strm)))))
+
 
 (define-syntax stream-lambda
   (syntax-rules ()
     ((stream-lambda formals body0 body1 ***)
      (lambda formals (stream-lazy (let () body0 body1 ***))))))
 
-;;; eof
+
+;;; *EOF*

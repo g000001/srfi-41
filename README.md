@@ -1,5 +1,6 @@
-* SRFI 41: Streams
-- Copyright (C) Philip L. Bewig (2007). All Rights Reserved.
+# SRFI 41 for CL: Streams
+
+* Copyright (C) Philip L. Bewig (2007). All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
